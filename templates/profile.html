@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}User Profile & Account Settings — Personal Finance Advisor Bot{% endblock %}
+
+{% block content %}
+<div class="profile-page" style="max-width: 800px; margin: 0 auto;">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Personal Profile & Credentials</h1>
+      <p class="page-subtitle">Manage your account credentials, base income figure, and review your financial health standing</p>
+    </div>
+  </div>
+
+  <!-- Profile Summary Card with Health Gauge -->
+  <div class="card" style="margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.5rem;">
+    <div style="display: flex; align-items: center; gap: 1.25rem;">
+      <div style="width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--accent-cyan)); display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700; color: #fff;">
+        {{ user.full_name[0]|upper }}
+      </div>
+      <div>
+        <h2 style="font-size: 1.4rem; font-weight: 700;">{{ user.full_name }}</h2>
+        <div style="color: var(--text-muted); font-size: 0.875rem;">{{ user.email }}</div>
+        <div style="color: var(--text-dim); font-size: 0.8rem; margin-top: 0.25rem;">
+          Member since {{ user.created_at.strftime('%B %Y') if user.created_at else 'Recent' }} &bull; Age: {{ user.age }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Health Score Badge -->
+    <div style="text-align: right;">
+      <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Health Score Rating</div>
+      <div style="font-size: 2rem; font-weight: 800; color: {{ health_data.color }};">
+        {{ health_data.score }}<span style="font-size: 1rem; color: var(--text-dim);">/100</span>
+      </div>
+      <span class="badge {{ health_data.badge_class }}">{{ health_data.rating }}</span>
+    </div>
+  </div>
+
+  <!-- Profile Edit Form -->
+  <div class="card" style="margin-bottom: 2rem;">
+    <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1.5rem;">Update Account Details</h3>
+
+    <form method="POST" action="{{ url_for('profile.view_profile') }}" id="profile-form">
+      <div class="form-group">
+        <label class="form-label" for="prof-name">Full Name *</label>
+        <input type="text" class="form-control" id="prof-name" name="full_name" value="{{ user.full_name }}" required minlength="2">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="prof-email">Email Address</label>
+        <input type="email" class="form-control" id="prof-email" value="{{ user.email }}" disabled style="opacity: 0.7; cursor: not-allowed;">
+        <small style="color: var(--text-dim); font-size: 0.75rem;">Email address cannot be modified to preserve transaction integrity.</small>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label" for="prof-age">Age *</label>
+          <input type="number" class="form-control" id="prof-age" name="age" value="{{ user.age }}" min="16" max="120" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="prof-income">Base Monthly Income (₹) *</label>
+          <input type="number" class="form-control" id="prof-income" name="monthly_income" value="{{ user.monthly_income }}" min="0" step="any" required>
+        </div>
+      </div>
+
+      <!-- Security / Password change divider -->
+      <div style="margin: 2rem 0 1.5rem 0; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+        <h4 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.25rem;">Change Password (Optional)</h4>
+        <p style="color: var(--text-dim); font-size: 0.8rem; margin-bottom: 1rem;">Leave these fields blank if you do not wish to change your password.</p>
+
+        <div class="form-group">
+          <label class="form-label" for="prof-curr-pass">Current Password</label>
+          <input type="password" class="form-control" id="prof-curr-pass" name="current_password" placeholder="Enter current password to verify">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label" for="prof-new-pass">New Password</label>
+            <input type="password" class="form-control" id="prof-new-pass" name="new_password" placeholder="Min 6 characters" minlength="6">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="prof-confirm-pass">Confirm New Password</label>
+            <input type="password" class="form-control" id="prof-confirm-pass" name="confirm_new_password" placeholder="Re-enter new password" minlength="6">
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end;">
+        <button type="submit" class="btn btn-primary" id="btn-save-profile">
+          Save Profile Updates
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

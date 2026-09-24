@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}EMI Loan Calculator — Personal Finance Advisor Bot{% endblock %}
+
+{% block content %}
+<div class="calculator-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Equated Monthly Installment (EMI) Calculator</h1>
+      <p class="page-subtitle">Simulate loan repayments, examine interest vs. principal split, and test zero-interest schemes</p>
+    </div>
+  </div>
+
+  {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+  {% endif %}
+
+  <div class="dashboard-grid">
+    <!-- Calculator Form Controls -->
+    <div class="card">
+      <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1.5rem;">Loan Parameters</h3>
+
+      <form method="POST" id="emi-form">
+        <!-- Principal Input & Range Slider -->
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+            <label class="form-label" for="calc-principal" style="margin-bottom: 0;">Loan Principal Amount (₹)</label>
+            <span id="display-principal" style="font-weight: 700; color: var(--primary);">{{ principal|inr }}</span>
+          </div>
+          <input type="number" class="form-control" id="calc-principal" name="principal" value="{{ principal }}" min="1000" max="10000000" step="1000" required>
+          <input type="range" id="slider-principal" min="10000" max="5000000" step="10000" value="{{ principal }}" style="width: 100%; margin-top: 0.5rem; accent-color: var(--primary);">
+        </div>
+
+        <!-- Annual Interest Rate & Slider -->
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+            <label class="form-label" for="calc-rate" style="margin-bottom: 0;">Annual Interest Rate (%)</label>
+            <span id="display-rate" style="font-weight: 700; color: var(--accent-cyan);">{{ annual_rate }}%</span>
+          </div>
+          <input type="number" class="form-control" id="calc-rate" name="annual_rate" value="{{ annual_rate }}" min="0" max="50" step="0.1" required>
+          <input type="range" id="slider-rate" min="0" max="30" step="0.25" value="{{ annual_rate }}" style="width: 100%; margin-top: 0.5rem; accent-color: var(--accent-cyan);">
+          <small style="color: var(--text-dim); font-size: 0.75rem;">Set to 0% for zero-cost / No-Cost EMI promotions.</small>
+        </div>
+
+        <!-- Loan Tenure & Slider -->
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+            <label class="form-label" for="calc-tenure" style="margin-bottom: 0;">Loan Tenure (Months)</label>
+            <span id="display-tenure" style="font-weight: 700; color: var(--accent-purple);">{{ tenure_months }} Months</span>
+          </div>
+          <input type="number" class="form-control" id="calc-tenure" name="tenure_months" value="{{ tenure_months }}" min="1" max="360" step="1" required>
+          <input type="range" id="slider-tenure" min="3" max="120" step="1" value="{{ tenure_months }}" style="width: 100%; margin-top: 0.5rem; accent-color: var(--accent-purple);">
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="btn-calc-submit" style="width: 100%; margin-top: 1rem;">
+          Calculate Server-side
+        </button>
+      </form>
+    </div>
+
+    <!-- Results Display -->
+    <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+      <div>
+        <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1.5rem;">Repayment Breakdown</h3>
+
+        <!-- Big EMI Result Banner -->
+        <div style="text-align: center; padding: 2rem 1rem; background: var(--bg-card-subtle); border-radius: var(--radius-lg); border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
+          <span style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Monthly Loan EMI</span>
+          <div id="emi-amount" style="font-size: 2.75rem; font-weight: 800; color: var(--primary); letter-spacing: -0.03em; margin: 0.25rem 0;">
+            {{ result.formatted_emi if result else '₹0' }}
+          </div>
+          <span style="font-size: 0.8rem; color: var(--text-dim);">per month for <span id="tenure-summary">{{ tenure_months }}</span> months</span>
+        </div>
+
+        <!-- Metric comparison -->
+        <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-color); font-size: 0.925rem;">
+          <span style="color: var(--text-muted);">Principal Loan Amount:</span>
+          <span style="font-weight: 700;" id="summary-principal">{{ result.formatted_principal if result else principal|inr }}</span>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-color); font-size: 0.925rem;">
+          <span style="color: var(--text-muted);">Total Interest Payable:</span>
+          <span style="font-weight: 700; color: #f87171;" id="summary-interest">{{ result.formatted_total_interest if result else '₹0' }}</span>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; font-size: 1rem;">
+          <span style="font-weight: 600;">Total Amount (Principal + Interest):</span>
+          <span style="font-weight: 800; color: var(--accent-cyan);" id="summary-total">{{ result.formatted_total_payment if result else '₹0' }}</span>
+        </div>
+      </div>
+
+      <!-- Ratio Bar -->
+      <div style="margin-top: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-dim); margin-bottom: 0.35rem;">
+          <span id="principal-pct-label">Principal: {{ result.principal_percentage if result else 100 }}%</span>
+          <span id="interest-pct-label">Interest: {{ result.interest_percentage if result else 0 }}%</span>
+        </div>
+        <div class="progress-bar-container" style="height: 12px;">
+          <div id="ratio-bar-principal" class="progress-bar" style="width: {{ result.principal_percentage if result else 100 }}%; background: var(--primary);"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Educational Formula Explanation -->
+  <div class="card" style="margin-top: 1.5rem;">
+    <h4 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem;">Standard Mathematical Amortization Formula</h4>
+    <p style="color: var(--text-muted); font-size: 0.875rem; line-height: 1.6;">
+      $$\text{EMI} = P \times \frac{r \times (1 + r)^n}{(1 + r)^n - 1}$$
+      where <strong>P</strong> is the principal borrowed, <strong>r</strong> is the monthly interest rate ($\frac{\text{Annual Rate}}{12 \times 100}$), and <strong>n</strong> is the loan tenure in months.
+      When the interest rate is 0%, the equation simplifies to $\text{EMI} = \frac{P}{n}$.
+    </p>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/calculator.js') }}"></script>
+{% endblock %}

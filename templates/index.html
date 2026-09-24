@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Personal Finance Advisor Bot — Understand Your Money. Plan Your Future.{% endblock %}
+
+{% block content %}
+<div class="landing-page">
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-badge">
+      <span>✨ Capstone Project: NASSCOM / FutureSkills Prime</span>
+    </div>
+    <h1 class="hero-title">
+      Understand Your Money.<br>
+      <span style="background: linear-gradient(135deg, var(--primary), var(--accent-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Plan Your Future.</span>
+    </h1>
+    <p class="hero-subtitle">
+      Personal Finance Advisor Bot delivers transparent financial health scoring, automated 50/30/20 budgeting, goal milestone forecasting, and an intelligent context-aware financial advisor built for Indian households.
+    </p>
+    <div class="hero-actions">
+      <a href="{{ url_for('auth.register') }}" class="btn btn-primary" id="btn-hero-register" style="padding: 0.85rem 2rem; font-size: 1.05rem;">
+        Get Started Free &rarr;
+      </a>
+      <a href="{{ url_for('auth.login') }}" class="btn btn-secondary" id="btn-hero-login" style="padding: 0.85rem 1.75rem; font-size: 1.05rem;">
+        Existing User Login
+      </a>
+      <a href="{{ url_for('calculator.emi_calculator') }}" class="btn btn-outline" id="btn-hero-emi" style="padding: 0.85rem 1.5rem;">
+        Try EMI Calculator
+      </a>
+    </div>
+  </section>
+
+  <!-- Project Introduction / Pillars Banner -->
+  <section style="margin: 3rem 0; padding: 2.5rem; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border-color);">
+    <div style="max-width: 900px; margin: 0 auto; text-align: center;">
+      <h2 style="font-size: 1.75rem; margin-bottom: 1rem; color: var(--text-main);">Why Personal Finance Advisor Bot?</h2>
+      <p style="color: var(--text-muted); font-size: 1.05rem; line-height: 1.7;">
+        Many working professionals and students struggle with unstructured spending, hidden subscriptions, and unclear savings roadmaps. 
+        This application bridges that gap with transparent 0–100 financial health metrics, disciplined category allocation, and data-driven suggestions without complex jargon.
+      </p>
+    </div>
+  </section>
+
+  <!-- Main Features Grid -->
+  <section style="margin: 4rem 0;">
+    <div style="text-align: center; margin-bottom: 2.5rem;">
+      <h2 style="font-size: 2rem; font-weight: 700; color: var(--text-main);">Comprehensive Financial Toolkit</h2>
+      <p style="color: var(--text-muted); margin-top: 0.5rem;">Engineered for accuracy, privacy, and actionable insight</p>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🛡️</div>
+        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem; color: var(--text-main);">Financial Health Score</h3>
+        <p style="color: var(--text-muted); font-size: 0.925rem;">
+          A transparent 0–100 educational rating evaluating savings rates, debt pressure, budget adherence, and safety cushion.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem; color: var(--text-main);">Expense & Income Tracking</h3>
+        <p style="color: var(--text-muted); font-size: 0.925rem;">
+          Log multi-source incomes and categorize expenses into 9 distinct categories with instant INR currency analytics and date filters.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🎯</div>
+        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem; color: var(--text-main);">Smart Savings Goals</h3>
+        <p style="color: var(--text-muted); font-size: 0.925rem;">
+          Set targets for Emergency Funds, electronics, or travel. The system automatically computes monthly savings targets needed to meet your deadlines.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🤖</div>
+        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem; color: var(--text-main);">AI Financial Advisor</h3>
+        <p style="color: var(--text-muted); font-size: 0.925rem;">
+          Interact with an advisor loaded with your live financial context. Features an intelligent local rule fallback engine with optional Gemini API integration.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📉</div>
+        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem; color: var(--text-main);">50/30/20 Budget Planner</h3>
+        <p style="color: var(--text-muted); font-size: 0.925rem;">
+          Plan planned caps across categories, compare against real-time actuals, and receive warnings whenever projections exceed revenue.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🖩</div>
+        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem; color: var(--text-main);">Interactive EMI Engine</h3>
+        <p style="color: var(--text-muted); font-size: 0.925rem;">
+          Simulate auto, personal, or home loans with accurate mathematical amortization, interest-to-principal ratios, and zero-interest support.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works Section -->
+  <section style="margin: 4rem 0; padding: 3rem 2rem; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border-color);">
+    <div style="text-align: center; margin-bottom: 3rem;">
+      <h2 style="font-size: 2rem; font-weight: 700;">How It Works</h2>
+      <p style="color: var(--text-muted); margin-top: 0.5rem;">Three straightforward steps to complete financial clarity</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; text-align: center;">
+      <div>
+        <div style="width: 50px; height: 50px; border-radius: 50%; background: rgba(16, 185, 129, 0.2); color: var(--primary); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem auto; font-weight: 800; font-size: 1.25rem;">1</div>
+        <h4 style="font-size: 1.15rem; margin-bottom: 0.5rem;">Create Your Account</h4>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Register with your base monthly income. All user data is securely isolated with PBKDF2 password encryption.</p>
+      </div>
+
+      <div>
+        <div style="width: 50px; height: 50px; border-radius: 50%; background: rgba(6, 182, 212, 0.2); color: var(--accent-cyan); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem auto; font-weight: 800; font-size: 1.25rem;">2</div>
+        <h4 style="font-size: 1.15rem; margin-bottom: 0.5rem;">Log Transactions & Budgets</h4>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Add your daily expenses and income streams. Set custom monthly category budgets to guard against overspending.</p>
+      </div>
+
+      <div>
+        <div style="width: 50px; height: 50px; border-radius: 50%; background: rgba(139, 92, 246, 0.2); color: var(--accent-purple); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem auto; font-weight: 800; font-size: 1.25rem;">3</div>
+        <h4 style="font-size: 1.15rem; margin-bottom: 0.5rem;">Get AI Insights & Reports</h4>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Receive automated health scores, tailored tips, interactive charts, and print-ready monthly audit summaries.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Box -->
+  <section style="margin: 4rem 0; text-align: center; padding: 3rem 1.5rem; background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(6, 182, 212, 0.1)); border-radius: var(--radius-lg); border: 1px solid rgba(16, 185, 129, 0.3);">
+    <h2 style="font-size: 2.25rem; font-weight: 700; margin-bottom: 1rem;">Ready to Take Control of Your Finances?</h2>
+    <p style="color: var(--text-muted); font-size: 1.1rem; max-width: 600px; margin: 0 auto 2rem auto;">
+      Start tracking your cash flow, building your emergency cushion, and receiving personalized guidance today.
+    </p>
+    <a href="{{ url_for('auth.register') }}" class="btn btn-primary" id="btn-cta-register" style="padding: 0.9rem 2.5rem; font-size: 1.1rem;">
+      Create Free Account
+    </a>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Create Account — Personal Finance Advisor Bot{% endblock %}
+
+{% block content %}
+<div style="max-width: 500px; margin: 2rem auto;">
+  <div class="card">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <div class="brand-icon" style="margin: 0 auto 1rem auto; width: 48px; height: 48px; font-size: 1.5rem;">₹</div>
+      <h2 style="font-size: 1.75rem; font-weight: 700;">Join FinanceBot</h2>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">Start building your personalized wealth plan</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('auth.register') }}" id="register-form">
+      <div class="form-group">
+        <label class="form-label" for="full_name">Full Name *</label>
+        <input type="text" class="form-control" id="full_name" name="full_name" value="{{ full_name or '' }}" placeholder="e.g. Rahul Sharma" required minlength="2">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="email">Email Address *</label>
+        <input type="email" class="form-control" id="email" name="email" value="{{ email or '' }}" placeholder="rahul@example.com" required>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label" for="age">Age *</label>
+          <input type="number" class="form-control" id="age" name="age" value="{{ age or '' }}" placeholder="25" min="16" max="120" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="monthly_income">Monthly Income (₹) *</label>
+          <input type="number" class="form-control" id="monthly_income" name="monthly_income" value="{{ monthly_income or '' }}" placeholder="50000" min="0" step="any" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password">Password *</label>
+        <input type="password" class="form-control" id="password" name="password" placeholder="At least 6 characters" minlength="6" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="confirm_password">Confirm Password *</label>
+        <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Re-enter password" minlength="6" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary" id="btn-submit-register" style="width: 100%; margin-top: 1rem; padding: 0.8rem;">
+        Create Account
+      </button>
+    </form>
+
+    <div style="text-align: center; margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1.25rem;">
+      <span style="color: var(--text-muted); font-size: 0.9rem;">Already have an account? </span>
+      <a href="{{ url_for('auth.login') }}" style="color: var(--primary); text-decoration: none; font-weight: 600;">Log In</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

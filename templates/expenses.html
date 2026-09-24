@@ -1,0 +1,324 @@
+{% extends "base.html" %}
+
+{% block title %}Income & Expense Management — Personal Finance Advisor Bot{% endblock %}
+
+{% block content %}
+<div class="expenses-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Transactions & Cash Inflow</h1>
+      <p class="page-subtitle">Track every rupee coming in and going out with complete category precision</p>
+    </div>
+    <div style="display: flex; gap: 0.75rem;">
+      <button type="button" class="btn btn-primary btn-sm" onclick="openExpenseModal();" id="btn-open-expense-modal">
+        + Add Expense
+      </button>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="openIncomeModal();" id="btn-open-income-modal">
+        + Add Income
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary Totals -->
+  <div class="metrics-grid" style="margin-bottom: 2rem;">
+    <div class="card metric-card">
+      <div class="metric-header">
+        <span>Total Recorded Incomes</span>
+        <span>💵</span>
+      </div>
+      <div class="metric-value" style="color: var(--primary);">{{ formatted_total_incomes }}</div>
+      <div class="metric-sub">{{ incomes|length }} incoming transaction records</div>
+    </div>
+
+    <div class="card metric-card accent-danger">
+      <div class="metric-header">
+        <span>Total Outflows (Expenses)</span>
+        <span>💳</span>
+      </div>
+      <div class="metric-value" style="color: #f87171;">{{ formatted_total_expenses }}</div>
+      <div class="metric-sub">{{ expenses|length }} recorded purchases</div>
+    </div>
+
+    <div class="card metric-card accent-cyan">
+      <div class="metric-header">
+        <span>Current Net Balance</span>
+        <span>📊</span>
+      </div>
+      <div class="metric-value">
+        {{ (total_incomes - total_expenses)|inr }}
+      </div>
+      <div class="metric-sub">Calculated from transaction logs</div>
+    </div>
+  </div>
+
+  <!-- Category Quick Breakdown Pills -->
+  {% if category_breakdown %}
+    <div style="margin-bottom: 2rem; overflow-x: auto; display: flex; gap: 0.75rem; padding-bottom: 0.5rem;">
+      {% for cat, amt in category_breakdown.items() %}
+        <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 0.5rem 1rem; border-radius: var(--radius-md); white-space: nowrap;">
+          <span style="color: var(--text-muted); font-size: 0.8rem;">{{ cat }}:</span>
+          <span style="font-weight: 700; color: var(--text-main); font-size: 0.85rem; margin-left: 0.35rem;">{{ amt|inr }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Filter & Search Bar for Expenses -->
+  <div class="card" style="margin-bottom: 2rem; padding: 1.25rem;">
+    <form method="GET" action="{{ url_for('expenses.list_expenses') }}" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
+      <div style="flex: 2; min-width: 200px;">
+        <label class="form-label" style="font-size: 0.8rem;">Search Description / Name</label>
+        <input type="text" class="form-control" name="q" value="{{ search_query }}" placeholder="Filter by title..." style="padding: 0.5rem 0.75rem;">
+      </div>
+
+      <div style="flex: 1; min-width: 150px;">
+        <label class="form-label" style="font-size: 0.8rem;">Category</label>
+        <select class="form-control" name="category" style="padding: 0.5rem 0.75rem;">
+          <option value="">All Categories</option>
+          {% for cat in categories %}
+            <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div style="flex: 1; min-width: 140px;">
+        <label class="form-label" style="font-size: 0.8rem;">From Date</label>
+        <input type="date" class="form-control" name="start_date" value="{{ start_date }}" style="padding: 0.5rem 0.75rem;">
+      </div>
+
+      <div style="flex: 1; min-width: 140px;">
+        <label class="form-label" style="font-size: 0.8rem;">To Date</label>
+        <input type="date" class="form-control" name="end_date" value="{{ end_date }}" style="padding: 0.5rem 0.75rem;">
+      </div>
+
+      <div style="display: flex; gap: 0.5rem;">
+        <button type="submit" class="btn btn-primary btn-sm" style="padding: 0.6rem 1rem;">Filter</button>
+        <a href="{{ url_for('expenses.list_expenses') }}" class="btn btn-secondary btn-sm" style="padding: 0.6rem 1rem;">Reset</a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Expenses Table -->
+  <div class="card" style="margin-bottom: 2.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+      <h3 style="font-size: 1.2rem; font-weight: 700;">Recorded Expenses ({{ expenses|length }})</h3>
+      <button type="button" class="btn btn-primary btn-sm" onclick="openExpenseModal();">+ Add Expense</button>
+    </div>
+
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Expense Name</th>
+            <th>Category</th>
+            <th>Description</th>
+            <th>Amount (INR)</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if expenses %}
+            {% for exp in expenses %}
+              <tr>
+                <td style="color: var(--text-dim); font-size: 0.85rem;">{{ exp.date.strftime('%Y-%m-%d') }}</td>
+                <td style="font-weight: 600;">{{ exp.title }}</td>
+                <td>
+                  <span class="badge" style="background: rgba(255,255,255,0.06); color: var(--text-main);">{{ exp.category }}</span>
+                </td>
+                <td style="color: var(--text-muted); font-size: 0.85rem;">{{ exp.description or '—' }}</td>
+                <td style="font-weight: 700; color: #f87171;">-{{ exp.amount|inr }}</td>
+                <td style="text-align: right; white-space: nowrap;">
+                  <button type="button" class="btn btn-secondary btn-sm" 
+                          onclick="openEditExpenseModal('{{ exp.id }}', '{{ exp.title|escape }}', '{{ exp.amount }}', '{{ exp.category }}', '{{ exp.date.strftime('%Y-%m-%d') }}', '{{ (exp.description or '')|escape }}');"
+                          style="margin-right: 0.4rem;">
+                    Edit
+                  </button>
+                  <form method="POST" action="{{ url_for('expenses.delete_expense', expense_id=exp.id) }}" style="display: inline;" onsubmit="return confirm('Delete expense \'{{ exp.title }}\'?');">
+                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="6" style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+                No expenses match the specified criteria.<br>
+                <button type="button" class="btn btn-outline btn-sm" onclick="openExpenseModal();" style="margin-top: 1rem;">Add Expense</button>
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Incomes Table -->
+  <div class="card" id="income-section">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+      <h3 style="font-size: 1.2rem; font-weight: 700;">Recorded Incomes ({{ incomes|length }})</h3>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="openIncomeModal();">+ Add Income</button>
+    </div>
+
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Source</th>
+            <th>Type</th>
+            <th>Amount (INR)</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if incomes %}
+            {% for inc in incomes %}
+              <tr>
+                <td style="color: var(--text-dim); font-size: 0.85rem;">{{ inc.date.strftime('%Y-%m-%d') }}</td>
+                <td style="font-weight: 600;">{{ inc.source }}</td>
+                <td>
+                  <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: var(--primary);">{{ inc.income_type }}</span>
+                </td>
+                <td style="font-weight: 700; color: var(--primary);">+{{ inc.amount|inr }}</td>
+                <td style="text-align: right;">
+                  <form method="POST" action="{{ url_for('expenses.delete_income', income_id=inc.id) }}" style="display: inline;" onsubmit="return confirm('Delete income from \'{{ inc.source }}\'?');">
+                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="5" style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">
+                No separate income transactions logged yet (default monthly income from your profile: {{ user.monthly_income|inr }}).<br>
+                <button type="button" class="btn btn-outline btn-sm" onclick="openIncomeModal();" style="margin-top: 1rem;">Log Income</button>
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Add Expense Modal -->
+<div class="modal-overlay" id="expenseModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 style="font-size: 1.25rem; font-weight: 700;">Add New Expense</h3>
+      <button class="modal-close" onclick="closeExpenseModal();">&times;</button>
+    </div>
+    <form method="POST" action="{{ url_for('expenses.add_expense') }}">
+      <div class="form-group">
+        <label class="form-label" for="add-title">Expense Name *</label>
+        <input type="text" class="form-control" id="add-title" name="title" placeholder="e.g. Grocery shopping, Metro pass" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="add-amount">Amount (₹) *</label>
+        <input type="number" class="form-control" id="add-amount" name="amount" placeholder="e.g. 1500" min="0.01" step="any" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="add-category">Category *</label>
+        <select class="form-control" id="add-category" name="category" required>
+          {% for cat in categories %}
+            <option value="{{ cat }}">{{ cat }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="add-date">Date *</label>
+        <input type="date" class="form-control" id="add-date" name="date" value="{{ today_date }}" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="add-desc">Description (Optional)</label>
+        <input type="text" class="form-control" id="add-desc" name="description" placeholder="Notes or vendor name">
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+        <button type="button" class="btn btn-secondary" onclick="closeExpenseModal();">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="btn-submit-add-expense">Save Expense</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Expense Modal -->
+<div class="modal-overlay" id="editExpenseModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 style="font-size: 1.25rem; font-weight: 700;">Edit Expense</h3>
+      <button class="modal-close" onclick="closeEditExpenseModal();">&times;</button>
+    </div>
+    <form method="POST" id="editExpenseForm" action="">
+      <div class="form-group">
+        <label class="form-label" for="edit-title">Expense Name *</label>
+        <input type="text" class="form-control" id="edit-title" name="title" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="edit-amount">Amount (₹) *</label>
+        <input type="number" class="form-control" id="edit-amount" name="amount" min="0.01" step="any" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="edit-category">Category *</label>
+        <select class="form-control" id="edit-category" name="category" required>
+          {% for cat in categories %}
+            <option value="{{ cat }}">{{ cat }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="edit-date">Date *</label>
+        <input type="date" class="form-control" id="edit-date" name="date" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="edit-desc">Description</label>
+        <input type="text" class="form-control" id="edit-desc" name="description">
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+        <button type="button" class="btn btn-secondary" onclick="closeEditExpenseModal();">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="btn-submit-edit-expense">Update Expense</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Add Income Modal -->
+<div class="modal-overlay" id="incomeModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 style="font-size: 1.25rem; font-weight: 700;">Add Income Inflow</h3>
+      <button class="modal-close" onclick="closeIncomeModal();">&times;</button>
+    </div>
+    <form method="POST" action="{{ url_for('expenses.add_income') }}">
+      <div class="form-group">
+        <label class="form-label" for="inc-source">Income Source *</label>
+        <input type="text" class="form-control" id="inc-source" name="source" placeholder="e.g. Monthly Salary, Freelance project" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="inc-type">Income Type *</label>
+        <select class="form-control" id="inc-type" name="income_type" required>
+          {% for t in income_types %}
+            <option value="{{ t }}">{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="inc-amount">Amount (₹) *</label>
+        <input type="number" class="form-control" id="inc-amount" name="amount" placeholder="e.g. 50000" min="0.01" step="any" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="inc-date">Date *</label>
+        <input type="date" class="form-control" id="inc-date" name="date" value="{{ today_date }}" required>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+        <button type="button" class="btn btn-secondary" onclick="closeIncomeModal();">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="btn-submit-add-income">Record Income</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/expenses.js') }}"></script>
+{% endblock %}

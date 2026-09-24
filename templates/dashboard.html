@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}Financial Dashboard — Personal Finance Advisor Bot{% endblock %}
+
+{% block content %}
+<div class="dashboard-page">
+  <!-- Page Header & Quick Actions -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Welcome, {{ user.full_name }} 👋</h1>
+      <p class="page-subtitle">Real-time financial performance overview & educational analysis</p>
+    </div>
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+      <a href="{{ url_for('expenses.list_expenses') }}" class="btn btn-primary btn-sm" id="btn-quick-add-expense">
+        + Add Expense
+      </a>
+      <a href="{{ url_for('expenses.list_expenses') }}#income" class="btn btn-secondary btn-sm" id="btn-quick-add-income">
+        + Add Income
+      </a>
+      <a href="{{ url_for('chatbot.view_chatbot') }}" class="btn btn-outline btn-sm" id="btn-quick-ai">
+        🤖 Ask AI Advisor
+      </a>
+    </div>
+  </div>
+
+  <!-- Metric Summary Cards -->
+  <div class="metrics-grid">
+    <!-- Monthly Income -->
+    <div class="card metric-card">
+      <div class="metric-header">
+        <span>Monthly Income</span>
+        <span>💵</span>
+      </div>
+      <div class="metric-value">{{ formatted_income }}</div>
+      <div class="metric-sub">Base monthly cash inflow</div>
+    </div>
+
+    <!-- Total Expenses -->
+    <div class="card metric-card accent-danger">
+      <div class="metric-header">
+        <span>Total Expenses</span>
+        <span>💳</span>
+      </div>
+      <div class="metric-value" style="color: #f87171;">{{ formatted_expenses }}</div>
+      <div class="metric-sub">Recorded outflows this period</div>
+    </div>
+
+    <!-- Current Savings -->
+    <div class="card metric-card {% if current_savings >= 0 %}accent-cyan{% else %}accent-danger{% endif %}">
+      <div class="metric-header">
+        <span>Net Savings</span>
+        <span>💰</span>
+      </div>
+      <div class="metric-value" style="color: {% if current_savings >= 0 %}var(--primary){% else %}var(--color-danger){% endif %};">
+        {{ formatted_savings }}
+      </div>
+      <div class="metric-sub">Cash surplus remaining</div>
+    </div>
+
+    <!-- Savings Rate -->
+    <div class="card metric-card accent-purple">
+      <div class="metric-header">
+        <span>Savings Rate</span>
+        <span>📈</span>
+      </div>
+      <div class="metric-value">{{ savings_rate }}%</div>
+      <div class="metric-sub">Recommended target: &ge; 20%</div>
+    </div>
+
+    <!-- Financial Health Score -->
+    <div class="card metric-card" style="border-color: {{ health_data.color }};">
+      <div class="metric-header">
+        <span>Health Score</span>
+        <span class="badge {{ health_data.badge_class }}">{{ health_data.rating }}</span>
+      </div>
+      <div class="metric-value" style="color: {{ health_data.color }};">
+        {{ health_data.score }}<span style="font-size: 1rem; color: var(--text-dim);">/100</span>
+      </div>
+      <div class="metric-sub">{{ health_data.summary }}</div>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="dashboard-grid">
+    <!-- Left: Expense Category Doughnut Chart -->
+    <div class="card chart-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="font-size: 1.15rem; font-weight: 600;">Spending by Category</h3>
+        <span style="font-size: 0.8rem; color: var(--text-dim);">Live Database Analytics</span>
+      </div>
+      <div class="chart-wrapper">
+        <canvas id="categoryChart"></canvas>
+      </div>
+      <div id="categoryChartFallback" style="display: none; text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+        <p>No expense transactions recorded yet.</p>
+        <a href="{{ url_for('expenses.list_expenses') }}" class="btn btn-outline btn-sm" style="margin-top: 1rem;">Log First Expense</a>
+      </div>
+    </div>
+
+    <!-- Right: Income vs Expenses Comparison Bar Chart -->
+    <div class="card chart-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="font-size: 1.15rem; font-weight: 600;">Cash Flow Breakdown</h3>
+        <span style="font-size: 0.8rem; color: var(--text-dim);">INR (₹)</span>
+      </div>
+      <div class="chart-wrapper">
+        <canvas id="cashflowChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lower Section: Recent Expenses & Active Goals & AI Tips -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+    <!-- Recent Expenses Card -->
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="font-size: 1.15rem; font-weight: 600;">Recent Expenses</h3>
+        <a href="{{ url_for('expenses.list_expenses') }}" style="color: var(--primary); font-size: 0.85rem; text-decoration: none;">View All &rarr;</a>
+      </div>
+      {% if recent_expenses %}
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+          {% for exp in recent_expenses %}
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <div>
+                <div style="font-weight: 600; font-size: 0.95rem;">{{ exp.title }}</div>
+                <div style="font-size: 0.785rem; color: var(--text-dim);">
+                  <span class="badge" style="background: rgba(255,255,255,0.05); padding: 0.15rem 0.5rem; font-size: 0.7rem;">{{ exp.category }}</span>
+                  &bull; {{ exp.date.strftime('%d %b %Y') }}
+                </div>
+              </div>
+              <div style="font-weight: 700; color: #f87171;">
+                -{{ exp.amount|inr }}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p style="color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 2rem 0;">
+          No expense transactions recorded yet.<br>
+          <a href="{{ url_for('expenses.list_expenses') }}" style="color: var(--primary);">Add your first expense</a>
+        </p>
+      {% endif %}
+    </div>
+
+    <!-- Active Goals Card -->
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="font-size: 1.15rem; font-weight: 600;">Savings Goals</h3>
+        <a href="{{ url_for('goals.list_goals') }}" style="color: var(--primary); font-size: 0.85rem; text-decoration: none;">Manage Goals &rarr;</a>
+      </div>
+      {% if goals %}
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          {% for goal in goals %}
+            <div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.875rem; margin-bottom: 0.25rem;">
+                <span style="font-weight: 600;">{{ goal.name }}</span>
+                <span style="color: var(--text-muted);">{{ goal.current_amount|inr }} / {{ goal.target_amount|inr }}</span>
+              </div>
+              <div class="progress-bar-container">
+                <div class="progress-bar" style="width: {{ goal.progress_percentage }}%;"></div>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-dim);">
+                <span>{{ goal.progress_percentage }}% reached</span>
+                <span>Needs ~{{ goal.suggested_monthly_savings|inr }}/mo</span>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p style="color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 2rem 0;">
+          No savings goals set up yet.<br>
+          <a href="{{ url_for('goals.list_goals') }}" style="color: var(--primary);">Create your first savings goal</a>
+        </p>
+      {% endif %}
+    </div>
+
+    <!-- Personalized Financial Tips Card -->
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="font-size: 1.15rem; font-weight: 600;">Personalized Tips</h3>
+        <a href="{{ url_for('chatbot.view_chatbot') }}" style="color: var(--primary); font-size: 0.85rem; text-decoration: none;">Ask AI &rarr;</a>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+        {% for tip in personalized_tips %}
+          <div class="alert alert-{{ tip.type }}" style="margin: 0; padding: 0.75rem 1rem;">
+            <div>
+              <div style="font-weight: 700; font-size: 0.85rem; margin-bottom: 0.2rem;">{{ tip.title }}</div>
+              <div style="font-size: 0.8rem; line-height: 1.4;">{{ tip.message }}</div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Transparent Financial Health Explanation Modal/Accordion -->
+  <div class="card" style="margin-top: 1rem;">
+    <h3 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 0.5rem;">How Your Health Score ({{ health_data.score }}/100) is Calculated</h3>
+    <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.5rem;">
+      Our scoring model evaluates five transparent financial pillars. This is an educational tool, not an official credit bureau score.
+    </p>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+      {% for item in health_data.breakdown %}
+        <div style="background: var(--bg-card-subtle); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+          <div style="display: flex; justify-content: space-between; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.35rem;">
+            <span>{{ item.factor }}</span>
+            <span style="color: var(--primary);">{{ item.score }}/{{ item.max_score }}</span>
+          </div>
+          <p style="color: var(--text-muted); font-size: 0.8rem; line-height: 1.4;">{{ item.description }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

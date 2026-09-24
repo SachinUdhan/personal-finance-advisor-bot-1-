@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}AI Financial Advisor — Personal Finance Advisor Bot{% endblock %}
+
+{% block content %}
+<div class="chatbot-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Personal Financial AI Advisor</h1>
+      <p class="page-subtitle">Context-aware financial intelligence loaded with your real live numbers and goals</p>
+    </div>
+    <div style="font-size: 0.85rem; color: var(--text-muted); background: var(--bg-card); padding: 0.4rem 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+      Active Context: <strong style="color: var(--primary);">{{ formatted_income }}</strong> Inflow &bull; <strong style="color: #f87171;">{{ formatted_expenses }}</strong> Expenses
+    </div>
+  </div>
+
+  <div class="chat-container">
+    <!-- Chat Header -->
+    <div class="chat-header">
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <div style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-indigo), var(--accent-purple)); display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+          🤖
+        </div>
+        <div>
+          <div style="font-weight: 700; font-size: 0.95rem;">FinanceBot AI Assistant</div>
+          <div style="font-size: 0.75rem; color: var(--primary); display: flex; align-items: center; gap: 0.35rem;">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--primary); display: inline-block;"></span>
+            Live Context Linked
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="clearChatHistory();" style="font-size: 0.75rem;">Clear Chat</button>
+    </div>
+
+    <!-- Chat Message Stream -->
+    <div class="chat-messages" id="chat-messages">
+      <!-- Default Welcome Message -->
+      <div class="message bot">
+        <p>
+          Hello <strong>{{ user.full_name }}</strong>! I am your AI financial advisor. 
+          I have analyzed your recorded transactions: your current monthly income is <strong>{{ formatted_income }}</strong>, 
+          total recorded expenses are <strong>{{ formatted_expenses }}</strong>, and your savings rate is <strong>{{ context.savings_rate }}%</strong>.
+        </p>
+        <p style="margin-top: 0.5rem;">
+          How can I assist you with your money decisions today?
+        </p>
+        <div class="message-meta">Advisor Bot &bull; Context Aware</div>
+      </div>
+    </div>
+
+    <!-- Quick Prompts Bar -->
+    <div class="quick-prompts">
+      <button class="quick-prompt-btn" onclick="sendQuickPrompt('Where am I spending too much?');">
+        📊 Where am I spending too much?
+      </button>
+      <button class="quick-prompt-btn" onclick="sendQuickPrompt('How can I save more money?');">
+        💰 How can I save more money?
+      </button>
+      <button class="quick-prompt-btn" onclick="sendQuickPrompt('How should I plan my monthly budget?');">
+        📅 How should I plan my monthly budget?
+      </button>
+      <button class="quick-prompt-btn" onclick="sendQuickPrompt('How can I reach my savings goal?');">
+        🎯 How can I reach my savings goal?
+      </button>
+      <button class="quick-prompt-btn" onclick="sendQuickPrompt('How can I reduce unnecessary expenses?');">
+        ✂️ How can I reduce unnecessary expenses?
+      </button>
+    </div>
+
+    <!-- Chat Input Form -->
+    <form class="chat-input-bar" id="chat-form">
+      <input type="text" class="form-control" id="chat-input" placeholder="Ask a question about your budget, spending, or savings..." autocomplete="off" required>
+      <button type="submit" class="btn btn-primary" id="btn-send-chat" style="padding: 0 1.5rem;">
+        Send
+      </button>
+    </form>
+  </div>
+
+  <!-- Mandatory AI Disclaimer Box -->
+  <div class="disclaimer-box" style="margin-top: 1.5rem;">
+    <strong>⚠️ Educational AI Disclaimer:</strong> {{ disclaimer }}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
+{% endblock %}

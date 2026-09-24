@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Personal Finance Advisor Bot - Understand Your Money. Plan Your Future. Capstone fintech application for income tracking, expense management, budget planning, and AI advisory.">
+  <title>{% block title %}Personal Finance Advisor Bot{% endblock %}</title>
+  
+  <!-- Modern Google Font: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <!-- Navigation Header -->
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="{{ url_for('dashboard.index' if session.get('user_id') else 'dashboard.landing') }}" class="brand" id="brand-link">
+        <div class="brand-icon">₹</div>
+        <span>FinanceBot</span>
+      </a>
+
+      <nav>
+        <ul class="nav-links">
+          {% if session.get('user_id') %}
+            <li><a href="{{ url_for('dashboard.index') }}" class="nav-link {% if request.endpoint == 'dashboard.index' %}active{% endif %}" id="nav-dashboard">Dashboard</a></li>
+            <li><a href="{{ url_for('expenses.list_expenses') }}" class="nav-link {% if request.endpoint == 'expenses.list_expenses' %}active{% endif %}" id="nav-expenses">Expenses</a></li>
+            <li><a href="{{ url_for('budget.view_budget') }}" class="nav-link {% if request.endpoint == 'budget.view_budget' %}active{% endif %}" id="nav-budget">Budget</a></li>
+            <li><a href="{{ url_for('goals.list_goals') }}" class="nav-link {% if request.endpoint == 'goals.list_goals' %}active{% endif %}" id="nav-goals">Goals</a></li>
+            <li><a href="{{ url_for('calculator.emi_calculator') }}" class="nav-link {% if request.endpoint == 'calculator.emi_calculator' %}active{% endif %}" id="nav-calculator">EMI Tool</a></li>
+            <li><a href="{{ url_for('chatbot.view_chatbot') }}" class="nav-link {% if request.endpoint == 'chatbot.view_chatbot' %}active{% endif %}" id="nav-chatbot">AI Advisor</a></li>
+            <li><a href="{{ url_for('report.view_report') }}" class="nav-link {% if request.endpoint == 'report.view_report' %}active{% endif %}" id="nav-report">Report</a></li>
+            <li><a href="{{ url_for('profile.view_profile') }}" class="nav-link {% if request.endpoint == 'profile.view_profile' %}active{% endif %}" id="nav-profile">Profile</a></li>
+          {% else %}
+            <li><a href="{{ url_for('dashboard.landing') }}" class="nav-link" id="nav-home">Home</a></li>
+            <li><a href="{{ url_for('calculator.emi_calculator') }}" class="nav-link" id="nav-public-calculator">EMI Calculator</a></li>
+          {% endif %}
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        {% if session.get('user_id') %}
+          <span style="font-size: 0.85rem; color: var(--text-muted); display: none; @media(min-width: 900px){display:inline;}">
+            👤 {{ session.get('user_name', 'User') }}
+          </span>
+          <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-sm" id="btn-logout">Logout</a>
+        {% else %}
+          <a href="{{ url_for('auth.login') }}" class="btn btn-secondary btn-sm" id="btn-login-nav">Log In</a>
+          <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm" id="btn-register-nav">Get Started</a>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Viewport -->
+  <main class="main-content">
+    <!-- Flash Messages Notification Area -->
+    <div class="flash-container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category if category != 'error' else 'danger' }}">
+              <span>{{ message }}</span>
+              <button type="button" style="background:none; border:none; color:inherit; cursor:pointer;" onclick="this.parentElement.remove();">&times;</button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+    </div>
+
+    <!-- Error container if 404/500 -->
+    {% if error_title %}
+      <div class="card" style="text-align: center; max-width: 600px; margin: 4rem auto; padding: 3rem;">
+        <h2 style="color: var(--color-warning); margin-bottom: 1rem;">{{ error_title }}</h2>
+        <p style="color: var(--text-muted); margin-bottom: 2rem;">{{ error_message }}</p>
+        <a href="{{ url_for('dashboard.index' if session.get('user_id') else 'dashboard.landing') }}" class="btn btn-primary">Return to Safety</a>
+      </div>
+    {% else %}
+      {% block content %}{% endblock %}
+    {% endif %}
+  </main>
+
+  <!-- Footer with Mandatory Financial Disclaimer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="disclaimer-box">
+        <strong>⚠️ Important Financial Disclaimer:</strong> This application provides educational financial information and general guidance based on user-provided data. It is not a substitute for professional financial advice, and calculations or recommendations may not be suitable for every individual.
+      </div>
+      <p style="color: var(--text-dim); font-size: 0.85rem; margin-top: 1rem;">
+        &copy; 2025 Personal Finance Advisor Bot &bull; NASSCOM / FutureSkills Prime Capstone Project &bull; All calculations are for educational self-evaluation.
+      </p>
+    </div>
+  </footer>
+
+  <!-- Safe CDN for Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

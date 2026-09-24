@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Monthly Budget Planner — Personal Finance Advisor Bot{% endblock %}
+
+{% block content %}
+<div class="budget-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Category Budget Allocations</h1>
+      <p class="page-subtitle">Allocate spending targets by category and compare planned caps against live actuals</p>
+    </div>
+  </div>
+
+  <!-- Budget Overview KPI Cards -->
+  <div class="metrics-grid">
+    <div class="card metric-card">
+      <div class="metric-header">
+        <span>Available Monthly Income</span>
+        <span>💵</span>
+      </div>
+      <div class="metric-value">{{ formatted_income }}</div>
+      <div class="metric-sub">Total monthly inflow ceiling</div>
+    </div>
+
+    <div class="card metric-card {% if is_over_budget %}accent-danger{% endif %}">
+      <div class="metric-header">
+        <span>Total Planned Allocations</span>
+        <span>🎯</span>
+      </div>
+      <div class="metric-value" style="color: {% if is_over_budget %}#f87171{% else %}var(--text-main){% endif %};">
+        {{ formatted_planned }}
+      </div>
+      <div class="metric-sub">Sum of all planned category caps</div>
+    </div>
+
+    <div class="card metric-card {% if is_over_budget %}accent-danger{% else %}accent-cyan{% endif %}">
+      <div class="metric-header">
+        <span>Expected Monthly Savings</span>
+        <span>💰</span>
+      </div>
+      <div class="metric-value" style="color: {% if is_over_budget %}#f87171{% else %}var(--primary){% endif %};">
+        {{ formatted_savings }}
+      </div>
+      <div class="metric-sub">{{ expected_savings_rate }}% expected savings rate</div>
+    </div>
+
+    <div class="card metric-card accent-purple">
+      <div class="metric-header">
+        <span>Actual Spent So Far</span>
+        <span>💳</span>
+      </div>
+      <div class="metric-value">{{ formatted_actual }}</div>
+      <div class="metric-sub">Live recorded transactions</div>
+    </div>
+  </div>
+
+  <!-- Deficit Warning Banner if Planned > Income -->
+  {% if is_over_budget %}
+    <div class="alert alert-danger" style="margin-bottom: 2rem;">
+      <div>
+        <strong>⚠️ Deficit Warning:</strong> Your total planned expenses ({{ formatted_planned }}) exceed your monthly income ({{ formatted_income }}) by {{ (total_planned - monthly_income)|inr }}.
+        Planning for a deficit leads to debt accumulation. Please lower discretionary category targets below.
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Budget Planner Form -->
+  <div class="card" style="margin-bottom: 2.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+      <h3 style="font-size: 1.25rem; font-weight: 700;">Set Planned Monthly Targets</h3>
+      <span style="font-size: 0.85rem; color: var(--text-muted);">Enter monthly limits for each category</span>
+    </div>
+
+    <form method="POST" action="{{ url_for('budget.view_budget') }}" id="budget-form">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th style="width: 220px;">Planned Monthly Cap (₹)</th>
+              <th>Actual Spent</th>
+              <th>Remaining Buffer</th>
+              <th style="width: 200px;">Utilization Progress</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in category_rows %}
+              <tr>
+                <td style="font-weight: 600;">
+                  <span class="badge" style="background: rgba(255,255,255,0.06); color: var(--text-main); font-size: 0.825rem;">
+                    {{ row.name }}
+                  </span>
+                </td>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="color: var(--text-muted);">₹</span>
+                    <input type="number" 
+                           class="form-control" 
+                           name="cat_{{ row.name }}" 
+                           value="{{ row.planned }}" 
+                           placeholder="0" 
+                           min="0" 
+                           step="any"
+                           style="padding: 0.4rem 0.6rem; font-size: 0.9rem;">
+                  </div>
+                </td>
+                <td style="font-weight: 600; color: {% if row.is_over %}#f87171{% else %}var(--text-main){% endif %};">
+                  {{ row.formatted_actual }}
+                </td>
+                <td style="color: {% if row.remaining < 0 %}#f87171{% elif row.remaining > 0 %}var(--primary){% else %}var(--text-dim){% endif %}; font-weight: 600;">
+                  {{ row.formatted_remaining }}
+                  {% if row.is_over %}<span style="font-size: 0.75rem; color: #f87171;">(Over!)</span>{% endif %}
+                </td>
+                <td>
+                  <div class="progress-bar-container" style="margin: 0 0 0.25rem 0;">
+                    <div class="progress-bar" style="width: {{ row.pct_used }}%; background: {% if row.is_over %}#ef4444{% elif row.pct_used > 85 %}#f59e0b{% else %}var(--primary){% endif %};"></div>
+                  </div>
+                  <span style="font-size: 0.75rem; color: var(--text-dim);">{{ row.pct_used }}% utilized</span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
+        <button type="submit" class="btn btn-primary" id="btn-save-budget">
+          💾 Save Budget Allocations
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Educational Budgeting Guidance Section -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+    <div class="card">
+      <h4 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--primary);">The 50/30/20 Rule Benchmark</h4>
+      <p style="color: var(--text-muted); font-size: 0.875rem; line-height: 1.6; margin-bottom: 1rem;">
+        A proven educational baseline for personal finance:
+      </p>
+      <ul style="color: var(--text-muted); font-size: 0.85rem; padding-left: 1.25rem; line-height: 1.7;">
+        <li><strong>50% Needs:</strong> Housing, Food/Groceries, Bills, Healthcare (Target: ~{{ (monthly_income * 0.5)|inr }}).</li>
+        <li><strong>30% Wants:</strong> Shopping, Entertainment, Dining out, Subscriptions (Target: ~{{ (monthly_income * 0.3)|inr }}).</li>
+        <li><strong>20% Savings:</strong> Emergency reserves, investments, debt prepayment (Target: ~{{ (monthly_income * 0.2)|inr }}).</li>
+      </ul>
+      <p style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.75rem;">
+        *Note: Financial rules are educational heuristics and may vary according to personal circumstances.
+      </p>
+    </div>
+
+    <div class="card">
+      <h4 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--accent-cyan);">Zero-Based Budgeting Technique</h4>
+      <p style="color: var(--text-muted); font-size: 0.875rem; line-height: 1.6; margin-bottom: 1rem;">
+        In Zero-Based Budgeting, every rupee is allocated a job before the month starts:
+      </p>
+      <ul style="color: var(--text-muted); font-size: 0.85rem; padding-left: 1.25rem; line-height: 1.7;">
+        <li>Income &minus; (Expenses + Planned Savings) = ₹0.</li>
+        <li>Surplus cash is never left unassigned, which prevents accidental impulse spending.</li>
+        <li>Regularly review budget allocations at month-end to adapt to variable income.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Monthly Financial Statement & Audit — Personal Finance Advisor Bot{% endblock %}
+
+{% block content %}
+<div class="report-page">
+  <div class="page-header no-print">
+    <div>
+      <h1 class="page-title">Monthly Financial Statement</h1>
+      <p class="page-subtitle">Generated executive audit summary for {{ report.user_name }} &bull; {{ report.report_date }}</p>
+    </div>
+    <div style="display: flex; gap: 0.75rem;">
+      <button type="button" class="btn btn-secondary btn-sm" onclick="window.print();" id="btn-print-report">
+        🖨️ Print / Save as PDF
+      </button>
+      <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary btn-sm">
+        Return to Dashboard
+      </a>
+    </div>
+  </div>
+
+  <!-- Report Header Card (Print-friendly) -->
+  <div class="card" style="margin-bottom: 2rem; border-top: 4px solid var(--primary);">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1.25rem;">
+      <div>
+        <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--text-main);">Personal Financial Health Audit</h2>
+        <div style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">
+          Account Holder: <strong>{{ report.user_name }}</strong> ({{ report.user_email }})
+        </div>
+      </div>
+      <div style="text-align: right;">
+        <span style="font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em;">Audit Period</span>
+        <div style="font-weight: 700; font-size: 1.1rem;">{{ report.report_date }}</div>
+      </div>
+    </div>
+
+    <!-- Executive Cash Flow KPI Summary -->
+    <div class="metrics-grid" style="margin-bottom: 1.5rem;">
+      <div style="background: var(--bg-card-subtle); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+        <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Total Income</span>
+        <div style="font-size: 1.6rem; font-weight: 700; color: var(--primary); margin-top: 0.25rem;">{{ report.formatted_total_income }}</div>
+      </div>
+
+      <div style="background: var(--bg-card-subtle); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+        <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Total Expenses</span>
+        <div style="font-size: 1.6rem; font-weight: 700; color: #f87171; margin-top: 0.25rem;">{{ report.formatted_total_expenses }}</div>
+      </div>
+
+      <div style="background: var(--bg-card-subtle); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+        <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Net Cash Retained</span>
+        <div style="font-size: 1.6rem; font-weight: 700; color: {% if report.net_savings >= 0 %}var(--accent-cyan){% else %}#f87171{% endif %}; margin-top: 0.25rem;">
+          {{ report.formatted_net_savings }}
+        </div>
+      </div>
+
+      <div style="background: var(--bg-card-subtle); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+        <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Savings Percentage</span>
+        <div style="font-size: 1.6rem; font-weight: 700; color: var(--accent-purple); margin-top: 0.25rem;">{{ report.savings_rate }}%</div>
+      </div>
+    </div>
+
+    <!-- Rating & Highest Outflow -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; background: var(--bg-card-subtle); padding: 1rem; border-radius: var(--radius-md);">
+      <div>
+        <span style="font-size: 0.8rem; color: var(--text-muted);">Health Score Rating:</span>
+        <div style="font-size: 1.15rem; font-weight: 700; color: {{ report.health_color }}; margin-top: 0.2rem;">
+          {{ report.health_score }}/100 &bull; {{ report.health_rating }}
+        </div>
+        <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0.25rem;">{{ report.health_summary }}</p>
+      </div>
+
+      <div>
+        <span style="font-size: 0.8rem; color: var(--text-muted);">Highest Spending Category:</span>
+        <div style="font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-top: 0.2rem;">
+          {{ report.top_category }} ({{ report.formatted_top_category_amount }})
+        </div>
+        <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0.25rem;">Primary outflow driver during this period</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detailed Category Spending Breakdown Table -->
+  <div class="card" style="margin-bottom: 2rem;">
+    <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem;">Expense Distribution by Category</h3>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Expense Category</th>
+            <th>Amount Spent</th>
+            <th>% of Total Outflow</th>
+            <th style="width: 250px;">Distribution</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if report.category_breakdown %}
+            {% for item in report.category_breakdown %}
+              <tr>
+                <td style="font-weight: 600;">{{ item.category }}</td>
+                <td style="font-weight: 700;">{{ item.formatted_amount }}</td>
+                <td>{{ item.percentage }}%</td>
+                <td>
+                  <div class="progress-bar-container" style="margin: 0;">
+                    <div class="progress-bar" style="width: {{ item.percentage }}%;"></div>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">No recorded expenses in this reporting cycle.</td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Savings Goals Milestone Status -->
+  <div class="card" style="margin-bottom: 2rem;">
+    <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem;">Active Savings Goals Status</h3>
+    {% if report.goals %}
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Goal Name</th>
+              <th>Target Amount</th>
+              <th>Current Balance</th>
+              <th>Remaining</th>
+              <th>Progress</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for g in report.goals %}
+              <tr>
+                <td style="font-weight: 600;">{{ g.name }}</td>
+                <td>{{ g.target_amount|inr }}</td>
+                <td style="color: var(--primary); font-weight: 700;">{{ g.current_amount|inr }}</td>
+                <td>{{ g.remaining_amount|inr }}</td>
+                <td>
+                  <span class="badge {% if g.is_completed %}badge-excellent{% else %}badge-good{% endif %}">
+                    {{ g.progress_percentage }}%
+                  </span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p style="color: var(--text-muted); font-size: 0.9rem;">No active savings goals recorded.</p>
+    {% endif %}
+  </div>
+
+  <!-- Automated Observations & Actionable Auditing -->
+  <div class="card" style="margin-bottom: 2rem;">
+    <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem;">Audit Observations & Key Takeaways</h3>
+    <ul style="padding-left: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem; color: var(--text-main); font-size: 0.925rem; line-height: 1.6;">
+      {% for obs in report.observations %}
+        <li>{{ obs }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <!-- Educational Statement Disclaimer -->
+  <div class="disclaimer-box" style="margin: 1.5rem 0;">
+    <strong>Statement Notice:</strong> {{ report.disclaimer }}
+  </div>
+</div>
+{% endblock %}
